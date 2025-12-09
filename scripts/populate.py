@@ -6,7 +6,12 @@ import unicodedata
 import os
 from sqlalchemy import create_engine
 
-DATASET_URL = "https://web.archive.org/web/20240423194012/https://naehrwertdaten.ch/wp-content/uploads/2023/08/Base_de_donnees_suisse_des_valeurs_nutritives.xlsx"  # web archive to have a fix URL
+# web archive to have a fix URL
+DATASET_URL = (
+    "https://web.archive.org/web/20240423194012/",
+    "https://naehrwertdaten.ch/wp-content/uploads/2023/08/",
+    "Base_de_donnees_suisse_des_valeurs_nutritives.xlsx",
+)
 
 CONVERSION_FACTORS = {"g": 1, "mg": 0.001, "kj": 1000, "µg": 0.000001, "kcal": 1000}
 

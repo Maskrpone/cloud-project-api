@@ -14,6 +14,7 @@ pkgs.mkShell {
 													pandas
 													typing
 													sqlmodel
+													flake8
 		]))
 
 			# Driver for mssql
