@@ -10,6 +10,10 @@ pkgs.mkShell {
 													pyodbc
 													fastapi
 													fastapi-cli
+													openpyxl
+													pandas
+													typing
+													sqlmodel
 		]))
 
 			# Driver for mssql
