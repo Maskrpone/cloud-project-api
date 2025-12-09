@@ -10,6 +10,11 @@ pkgs.mkShell {
 													pyodbc
 													fastapi
 													fastapi-cli
+													openpyxl
+													pandas
+													typing
+													sqlmodel
+													flake8
 		]))
 
 			# Driver for mssql
@@ -20,6 +25,8 @@ pkgs.mkShell {
 			# pytest
 			pyright
 			ruff
+			yamlfmt
+			yaml-language-server
 
 			docker-language-server
 			docker-compose-language-service

@@ -1,8 +1,5 @@
-from fastapi import FastAPI
-from sqlalchemy import create_engine
 import os
-
-app = FastAPI()
+from sqlalchemy import create_engine
 
 USERNAME = os.environ.get("TF_VAR_admin_username")
 PASSWORD = os.environ.get("TF_VAR_admin_password")
@@ -21,12 +18,12 @@ DRIVER_OPTIONS = (
 )
 
 CONN_STR = f"mssql+pyodbc://?odbc_connect={DRIVER_OPTIONS}"
-print(f"Connection String being used: {CONN_STR}")
 
-engine = create_engine(CONN_STR)
-
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+engine = create_engine(CONN_STR, echo=True)
 
 
+def get_db_session():
+    from sqlmodel import Session
+
+    with Session(engine) as session:
+        yield session

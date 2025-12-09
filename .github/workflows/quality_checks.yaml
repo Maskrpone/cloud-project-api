@@ -1,0 +1,27 @@
+name: Format and Lint
+
+on:
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  check_formatting_and_linting:
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python env
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install linters and formatters
+        run: pip install black flake8
+
+      - name: Run Black check
+        run: black --check .
+
+      - name: Run Flake8 linting
+        run: flake8 . --exclude .git,venv,.env,.venv,.nix,node_modules --show-source
