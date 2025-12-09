@@ -1,21 +1,21 @@
 terraform {
-	required_providers {
-		github = {
-			source = "integrations/github"
-			version = "~> 6.0"
-		}
-	}
+  required_providers {
+    github = {
+      source  = "integrations/github"
+      version = "~> 6.0"
+    }
+  }
 }
 
 provider "github" {
-	token = var.github_token
+  token = var.github_token
 }
 
 resource "github_repository" "repo" {
-	name = var.repo_name
-	description = "Cloud project"
-	visibility = "public"
-	auto_init = false 
+  name        = var.repo_name
+  description = "Cloud project"
+  visibility  = "public"
+  auto_init   = false
 }
 
 # Create the development branch from main
@@ -27,8 +27,8 @@ resource "github_branch" "dev" {
 
 # Lock main branch: Require PRs, no direct pushes
 resource "github_branch_protection" "main" {
-  repository_id = github_repository.repo.node_id
-  pattern       = "main"
+  repository_id  = github_repository.repo.node_id
+  pattern        = "main"
   enforce_admins = true
 
   required_pull_request_reviews {
@@ -44,8 +44,10 @@ resource "github_branch_protection" "dev" {
   enforce_admins = true
 
   required_status_checks {
-    strict = false # Force la branche features-* à être à jour avec la branche dev 
-    contexts = []
+    strict = true 
+    contexts = [
+      "check_formatting_and_linting",
+    ]
   }
 
   required_pull_request_reviews {

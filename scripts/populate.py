@@ -94,6 +94,7 @@ def remove_accents(text):
     normalized_text = unicodedata.normalize("NFKD", text)
     return normalized_text.encode("ascii", "ignore").decode("utf-8")
 
+
 def clean_data(df: pd.DataFrame):
     df = df.drop_duplicates()
     df = df.drop(columns=["ID V 4.0", "ID SwissFIR", "Densité", "Entrée modifiée"])
@@ -105,11 +106,7 @@ def clean_data(df: pd.DataFrame):
     df.columns = df.columns.str.replace(double_parenthesis_pattern, "", regex=True)
 
     df.columns = [
-        col.strip()
-        .replace(",", "")
-        .replace(" ", "_")
-        .replace("-", "_")
-        .lower() 
+        col.strip().replace(",", "").replace(" ", "_").replace("-", "_").lower()
         for col in df.columns
     ]
 
@@ -117,11 +114,9 @@ def clean_data(df: pd.DataFrame):
 
     return df
 
-dtype_measures = {
-        "name": "str",
-        "unit": "str",
-        "conversion": "float64"
-}
+
+dtype_measures = {"name": "str", "unit": "str", "conversion": "float64"}
+
 
 def create_measures_table(df: pd.DataFrame):
     measures = []
@@ -139,8 +134,9 @@ def create_measures_table(df: pd.DataFrame):
             )
 
     df = pd.DataFrame(measures).astype(dtype_measures)
-    
-    return df 
+
+    return df
+
 
 def create_food_table(df: pd.DataFrame):
     numerical_cols = [
@@ -182,12 +178,8 @@ def create_food_table(df: pd.DataFrame):
         "zinc",
         "selenium",
     ]
-    
 
-    df.columns = [
-            re.sub(r"\((.*?)\)", "", col).strip("_") 
-            for col in df.columns
-    ]
+    df.columns = [re.sub(r"\((.*?)\)", "", col).strip("_") for col in df.columns]
 
     df[numerical_cols] = df[numerical_cols].replace(
         ["tr.", "n.i.", ""], 0
@@ -202,6 +194,7 @@ def create_food_table(df: pd.DataFrame):
 
     return df
 
+
 def create_tables(df: pd.DataFrame):
     data = clean_data(df)
 
@@ -211,7 +204,9 @@ def create_tables(df: pd.DataFrame):
     measures_table_name = "measure_table"
     food_table_name = "food_table"
 
-    measures_table.to_sql(measures_table_name, con=engine, if_exists="replace", index=False)
+    measures_table.to_sql(
+        measures_table_name, con=engine, if_exists="replace", index=False
+    )
     food_table.to_sql(food_table_name, con=engine, if_exists="replace", index=False)
 
 

@@ -1,6 +1,9 @@
 import os
 from sqlalchemy import create_engine
 
+from app.models import Food
+from sqlmodel import Session
+
 USERNAME = os.environ.get("TF_VAR_admin_username")
 PASSWORD = os.environ.get("TF_VAR_admin_password")
 SERVER = os.environ.get("TF_VAR_sql_server_name")
@@ -21,7 +24,9 @@ CONN_STR = f"mssql+pyodbc://?odbc_connect={DRIVER_OPTIONS}"
 
 engine = create_engine(CONN_STR, echo=True)
 
+
 def get_db_session():
     from sqlmodel import Session
+
     with Session(engine) as session:
         yield session

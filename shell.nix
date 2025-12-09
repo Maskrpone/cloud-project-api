@@ -24,6 +24,8 @@ pkgs.mkShell {
 			# pytest
 			pyright
 			ruff
+			yamlfmt
+			yaml-language-server
 
 			docker-language-server
 			docker-compose-language-service
