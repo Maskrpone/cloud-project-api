@@ -95,8 +95,6 @@ def read_top_foods(
 
         top_foods = session.exec(top_foods_statement).all()
 
-        final_result.append(
-            {"categorie": key, "aliments": top_foods}
-        )
+        final_result.append({"categorie": key, "aliments": top_foods})
 
     return final_result
