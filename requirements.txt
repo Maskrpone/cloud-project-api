@@ -1,0 +1,9 @@
+SQLAlchemy==2.0.44
+sqlmodel==0.0.24
+typing-inspection==0.4.2
+typing_extensions==4.15.0
+fastapi==0.116.1
+fastapi-cli==0.0.8
+pandas==2.3.1
+openpyxl==3.1.5
+pyodbc==5.2.0

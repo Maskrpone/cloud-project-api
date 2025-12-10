@@ -1,6 +1,4 @@
 import pandas as pd
-from io import BytesIO
-import requests
 import re
 import unicodedata
 import os
@@ -48,6 +46,10 @@ dtype_food = {
     "acides_gras_satures": "float64",
     "acides_gras_mono_insatures": "float64",
     "acides_gras_poly_insatures": "float64",
+    "acide_linoleique": "float64",
+    "acide_alpha_linolenique": "float64",
+    "acide_eicosapentaenoique": "float64",
+    "acide_docosahexaenoique": "float64",
     "cholesterol": "int64",
     "glucides_disponibles": "float64",
     "sucres": "float64",
@@ -83,16 +85,18 @@ dtype_food = {
 
 
 def fetch_data(URL):
-    try:
-        response = requests.get(URL, stream=True)
-        response.raise_for_status()
-        data = BytesIO(response.content)
-        print("Data fetched")
-        df = pd.read_excel(data, engine="openpyxl", skiprows=2)
-        return df
-    except requests.exceptions.RequestException as e:
-        print(f"Error during download : {e}")
-        return
+    # try:
+    #     response = requests.get(URL, stream=True)
+    #     response.raise_for_status()
+    #     data = BytesIO(response.content)
+    #     print("Data fetched")
+    #     df = pd.read_excel(data, engine="openpyxl", skiprows=2)
+    #     return df
+    # except requests.exceptions.RequestException as e:
+    #     print(f"Error during download : {e}")
+    #     return
+    data = pd.read_excel("../data/food_data.xlsx", engine="openpyxl", skiprows=2)
+    return data
 
 
 def remove_accents(text):
@@ -151,6 +155,10 @@ def create_food_table(df: pd.DataFrame):
         "acides_gras_satures",
         "acides_gras_mono_insatures",
         "acides_gras_poly_insatures",
+        "acide_linoleique",
+        "acide_alpha_linolenique",
+        "acide_eicosapentaenoique",
+        "acide_docosahexaenoique",
         "cholesterol",
         "glucides_disponibles",
         "sucres",
