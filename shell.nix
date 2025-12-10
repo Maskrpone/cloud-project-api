@@ -28,6 +28,8 @@ pkgs.mkShell {
 			yamlfmt
 			yaml-language-server
 
+			bruno # API testing
+
 			docker-language-server
 			docker-compose-language-service
 
