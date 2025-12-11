@@ -193,5 +193,5 @@ resource "azurerm_federated_identity_credential" "github_deploy_credential" {
   parent_id = azurerm_user_assigned_identity.github_identity.id
   issuer = "https://token.actions.githubusercontent.com"
   subject = "repo:Maskrpone/cloud-project-api:ref:refs/heads/main"
-  audience = ["api://azureADTokenExchange"]
+  audience = ["api://AzureADTokenExchange"]
 }
