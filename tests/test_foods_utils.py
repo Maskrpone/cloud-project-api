@@ -10,12 +10,23 @@ from app.utils import (
 )
 
 
+class MockColumn:
+    """Mock a SQLAlchemy Column object to have query builder methods."""
+
+    # Required for the .in_() call
+    def in_(self, *args, **kwargs):
+        return self
+
+    # Required for the .desc() call in the order_by clause
+    def desc(self):
+        return self
+
+
 class MockFood:
     nom = "nom"
-    categorie = "categorie"
-
-    proteine = 1
-    phosphore = 1
+    categorie = MockColumn()
+    proteine = MockColumn()
+    phosphore = MockColumn()
 
 
 @pytest.mark.parametrize(
