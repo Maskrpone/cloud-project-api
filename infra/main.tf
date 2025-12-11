@@ -173,6 +173,8 @@ resource "azurerm_container_app" "api_app" {
   }
 }
 
+# Tried for obtaining a working CD (for Azure login with GitHub actions), 
+# but it is not working.
 resource "azurerm_user_assigned_identity" "github_identity" {
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
@@ -180,19 +182,19 @@ resource "azurerm_user_assigned_identity" "github_identity" {
 }
 
 resource "azurerm_role_assignment" "github_deployer_role" {
-  scope = data.azurerm_subscription.current.id
+  scope                = data.azurerm_subscription.current.id
   role_definition_name = "Contributor"
-  principal_id = azurerm_user_assigned_identity.github_identity.principal_id
+  principal_id         = azurerm_user_assigned_identity.github_identity.principal_id
 }
 
 resource "azurerm_federated_identity_credential" "github_deploy_credential" {
-  name = "github-deploy-credential"
+  name                = "github-deploy-credential"
   resource_group_name = azurerm_resource_group.rg.name
-  # location = azurerm_resource_group.rg.location
+  parent_id           = azurerm_user_assigned_identity.github_identity.id
+  issuer              = "https://token.actions.githubusercontent.com"
+  subject             = "repo:Maskrpone/cloud-project-api:ref:refs/heads/main"
 
-  parent_id = azurerm_user_assigned_identity.github_identity.id
-  issuer = "https://token.actions.githubusercontent.com"
-  subject = "repo:Maskrpone/cloud-project-api:ref:refs/heads/main"
   # audience = ["api://AzureADTokenExchange"]
   audience = ["api://azureadtokenexchange"]
 }
+

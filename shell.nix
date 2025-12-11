@@ -16,6 +16,7 @@ pkgs.mkShell {
 													sqlmodel
 													flake8
 													psycopg2
+													pytest
 		]))
 
 			# Driver for mssql
@@ -23,7 +24,6 @@ pkgs.mkShell {
 			unixODBCDrivers.msodbcsql17
 			unixODBC
 
-			# pytest
 			pyright
 			ruff
 			yamlfmt
