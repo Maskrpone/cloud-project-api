@@ -15,6 +15,7 @@ pkgs.mkShell {
 													typing
 													sqlmodel
 													flake8
+													psycopg2
 		]))
 
 			# Driver for mssql
@@ -30,7 +31,7 @@ pkgs.mkShell {
 
 			bruno # API testing
 
-			docker-language-server
+			dockerfile-language-server-nodejs
 			docker-compose-language-service
 
 			terraform-ls

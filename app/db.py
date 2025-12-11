@@ -1,15 +1,15 @@
 import os
 from sqlalchemy import create_engine
 
-USERNAME = os.environ.get("TF_VAR_admin_username")
-PASSWORD = os.environ.get("TF_VAR_admin_password")
-SERVER = os.environ.get("TF_VAR_sql_server_name")
+USERNAME = os.environ.get("ADMIN_USERNAME")
+PASSWORD = os.environ.get("ADMIN_PASSWORD")
+SERVER = os.environ.get("SQL_SERVER_NAME")
 DATABASE = "cloud-project-db"
 DRIVER = "{ODBC Driver 18 for SQL Server}"
 
 DRIVER_OPTIONS = (
     f"DRIVER={DRIVER};"
-    f"SERVER={SERVER}.database.windows.net;"
+    f"SERVER={SERVER};"
     f"DATABASE={DATABASE};"
     f"UID={USERNAME};"
     f"PWD={PASSWORD};"
@@ -18,6 +18,8 @@ DRIVER_OPTIONS = (
 )
 
 CONN_STR = f"mssql+pyodbc://?odbc_connect={DRIVER_OPTIONS}"
+
+print(CONN_STR)
 
 engine = create_engine(CONN_STR, echo=True)
 
