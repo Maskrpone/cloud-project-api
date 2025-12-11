@@ -46,7 +46,7 @@ def validate_params(nutrient, percentage) -> None:
 
 
 def get_top_foods_by_category(
-        session: Session, category: str, percentage: float, nutrient: str
+    session: Session, category: str, percentage: float, nutrient: str
 ):
     count_statement = select(func.count()).where(Food.categorie.in_(category))
     total_count = session.exec(count_statement).one()
