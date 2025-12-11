@@ -15,6 +15,7 @@ provider "azurerm" {
   features {}
 }
 
+# Random pet is used to get a random name for some resources (rg, mssql_server)
 resource "random_pet" "rg_name" {
   prefix = var.resource_group_name_prefix
 }
@@ -29,7 +30,7 @@ resource "random_pet" "azurerm_mssql_server_name" {
 }
 
 resource "random_password" "admin_password" {
-  count       = var.admin_password == null ? 1 : 0
+  count       = var.admin_password == null ? 1 : 0 # After init, need to pass on the password in an env TF_VAR_admin_password
   length      = 20
   special     = true
   min_numeric = 1
@@ -42,6 +43,7 @@ locals {
   admin_password = try(random_password.admin_password[0].result, var.admin_password)
 }
 
+# Creation of the mssql server
 resource "azurerm_mssql_server" "server" {
   name                         = random_pet.azurerm_mssql_server_name.id
   resource_group_name          = azurerm_resource_group.rg.name
@@ -51,6 +53,7 @@ resource "azurerm_mssql_server" "server" {
   version                      = "12.0"
 }
 
+# Creation of the mssql db
 resource "azurerm_mssql_database" "db" {
   name      = var.sql_db_name
   server_id = azurerm_mssql_server.server.id
@@ -61,6 +64,7 @@ resource "azurerm_mssql_database" "db" {
   min_capacity                = 0.5
 }
 
+# Creation of the Azure Container Registry (to store private container images)
 resource "azurerm_container_registry" "acr" {
   name                = "${replace(var.repo_name, "/[^a-z0-9]/", "")}acr"
   resource_group_name = azurerm_resource_group.rg.name
@@ -70,15 +74,7 @@ resource "azurerm_container_registry" "acr" {
   admin_enabled = true
 }
 
-resource "azurerm_service_plan" "app_service_plan" {
-  name                = "${var.repo_name}-asp"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
-
-  os_type  = "Linux"
-  sku_name = "F1"
-}
-
+# Firewall configuration to allow all Azure services to communicate 
 resource "azurerm_mssql_firewall_rule" "allow_azure_services" {
   name             = "AllowAzureServices"
   server_id        = azurerm_mssql_server.server.id
@@ -86,35 +82,45 @@ resource "azurerm_mssql_firewall_rule" "allow_azure_services" {
   end_ip_address   = "0.0.0.0"
 }
 
-resource "azurerm_linux_web_app" "fastapi_app" {
-  name                = "cloud-fastapi"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
-  service_plan_id     = azurerm_service_plan.app_service_plan.id
+# resource "azurerm_service_plan" "app_service_plan" {
+#   name                = "${var.repo_name}-asp"
+#   resource_group_name = azurerm_resource_group.rg.name
+#   location            = azurerm_resource_group.rg.location
+#
+#   os_type  = "Linux"
+#   sku_name = "F1"
+# }
 
 
-  site_config {
-
-    application_stack {
-      docker_image     = "${azurerm_container_registry.acr.login_server}/${var.app_image_name}:latest"
-      docker_image_tag = "latest"
-    }
-    # linux_fx_version = "DOCKER|${azurerm_container_registry.acr.login_server}/${var.app_image_name}:latest"
-  }
-
-  app_settings = {
-    "DOCKER_REGISTRY_SERVER_URL"      = azurerm_container_registry.acr.login_server
-    "DOCKER_REGISTRY_SERVER_USERNAME" = azurerm_container_registry.acr.admin_username
-    "DOCKER_REGISTRY_SERVER_PASSWORD" = azurerm_container_registry.acr.admin_password
-
-    # SQL Connection Settings
-    "SQL_SERVER_NAME" = azurerm_mssql_server.server.fully_qualified_domain_name
-    "SQL_DATABASE"    = azurerm_mssql_database.db.name
-    "ADMIN_USER"      = azurerm_mssql_server.server.administrator_login
-    "ADMIN_PASSWORD"  = local.admin_password
-  }
-
-  identity {
-    type = "SystemAssigned"
-  }
-}
+# resource "azurerm_linux_web_app" "fastapi_app" {
+#   name                = "cloud-fastapi"
+#   resource_group_name = azurerm_resource_group.rg.name
+#   location            = azurerm_resource_group.rg.location
+#   service_plan_id     = azurerm_service_plan.app_service_plan.id
+#
+#
+#   site_config {
+#
+#     application_stack {
+#       docker_image     = "${azurerm_container_registry.acr.login_server}/${var.app_image_name}:latest"
+#       docker_image_tag = "latest"
+#     }
+#     # linux_fx_version = "DOCKER|${azurerm_container_registry.acr.login_server}/${var.app_image_name}:latest"
+#   }
+#
+#   app_settings = {
+#     "DOCKER_REGISTRY_SERVER_URL"      = azurerm_container_registry.acr.login_server
+#     "DOCKER_REGISTRY_SERVER_USERNAME" = azurerm_container_registry.acr.admin_username
+#     "DOCKER_REGISTRY_SERVER_PASSWORD" = azurerm_container_registry.acr.admin_password
+#
+#     # SQL Connection Settings
+#     "SQL_SERVER_NAME" = azurerm_mssql_server.server.fully_qualified_domain_name
+#     "SQL_DATABASE"    = azurerm_mssql_database.db.name
+#     "ADMIN_USER"      = azurerm_mssql_server.server.administrator_login
+#     "ADMIN_PASSWORD"  = local.admin_password
+#   }
+#
+#   identity {
+#     type = "SystemAssigned"
+#   }
+# }
