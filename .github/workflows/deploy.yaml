@@ -44,4 +44,4 @@ jobs:
           docker build -t ${{env.FULL_IMAGE_PATH}} .
           docker push ${{ env.FULL_IMAGE_PATH }}
       - name: Deploy new API version to ACA
-        run: "az containerapp update  --name ${{env.CONTAINER_APP_NAME}} --resource-group ${{env.RESOURCE_GROUP}} -- image ${{env.FULL_IMAGE_PATH}}"
+        run: az containerapp update  --name ${{env.CONTAINER_APP_NAME}} --resource-group ${{env.RESOURCE_GROUP}} -- image ${{env.FULL_IMAGE_PATH}}
