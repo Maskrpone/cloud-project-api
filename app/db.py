@@ -1,9 +1,9 @@
 import os
 from sqlalchemy import create_engine
 
-USERNAME = os.environ.get("admin_username")
-PASSWORD = os.environ.get("admin_password")
-SERVER = os.environ.get("sql_server_name")
+USERNAME = os.environ.get("ADMIN_USERNAME")
+PASSWORD = os.environ.get("ADMIN_PASSWORD")
+SERVER = os.environ.get("SQL_SERVER_NAME")
 DATABASE = "cloud-project-db"
 DRIVER = "{ODBC Driver 18 for SQL Server}"
 

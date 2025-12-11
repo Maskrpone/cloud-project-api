@@ -56,9 +56,9 @@ resource "azurerm_mssql_database" "db" {
   server_id = azurerm_mssql_server.server.id
 
   # Cost efficiency
-  sku_name = "GP_S_Gen5_1"
+  sku_name                    = "GP_S_Gen5_1"
   auto_pause_delay_in_minutes = 60
-  min_capacity = 0.5
+  min_capacity                = 0.5
 }
 
 resource "azurerm_container_registry" "acr" {
@@ -66,8 +66,8 @@ resource "azurerm_container_registry" "acr" {
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
 
-  sku                 = "Basic"
-  admin_enabled       = true
+  sku           = "Basic"
+  admin_enabled = true
 }
 
 resource "azurerm_service_plan" "app_service_plan" {
@@ -75,29 +75,43 @@ resource "azurerm_service_plan" "app_service_plan" {
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
 
-  os_type             = "Linux"
-  sku_name            = "F1"
+  os_type  = "Linux"
+  sku_name = "F1"
+}
+
+resource "azurerm_mssql_firewall_rule" "allow_azure_services" {
+  name             = "AllowAzureServices"
+  server_id        = azurerm_mssql_server.server.id
+  start_ip_address = "0.0.0.0"
+  end_ip_address   = "0.0.0.0"
 }
 
 resource "azurerm_linux_web_app" "fastapi_app" {
-  name                = "cloud-api"
+  name                = "cloud-fastapi"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
   service_plan_id     = azurerm_service_plan.app_service_plan.id
 
+
   site_config {
-    linux_fx_version = "DOCKER|${azurerm_container_registry.acr.login_server}/${var.app_image_name}:latest"
+
+    application_stack {
+      docker_image     = "${azurerm_container_registry.acr.login_server}/${var.app_image_name}:latest"
+      docker_image_tag = "latest"
+    }
+    # linux_fx_version = "DOCKER|${azurerm_container_registry.acr.login_server}/${var.app_image_name}:latest"
   }
 
   app_settings = {
     "DOCKER_REGISTRY_SERVER_URL"      = azurerm_container_registry.acr.login_server
     "DOCKER_REGISTRY_SERVER_USERNAME" = azurerm_container_registry.acr.admin_username
     "DOCKER_REGISTRY_SERVER_PASSWORD" = azurerm_container_registry.acr.admin_password
+
     # SQL Connection Settings
-    "SQL_SERVER_NAME"    = azurerm_mssql_server.server.fully_qualified_domain_name
-    "SQL_DATABASE_NAME"  = azurerm_mssql_database.db.name
-    "SQL_ADMIN_USER"     = azurerm_mssql_server.server.administrator_login
-    "SQL_ADMIN_PASSWORD" = azurerm_mssql_server.server.administrator_login_password
+    "SQL_SERVER_NAME" = azurerm_mssql_server.server.fully_qualified_domain_name
+    "SQL_DATABASE"    = azurerm_mssql_database.db.name
+    "ADMIN_USER"      = azurerm_mssql_server.server.administrator_login
+    "ADMIN_PASSWORD"  = local.admin_password
   }
 
   identity {
