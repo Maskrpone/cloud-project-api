@@ -100,8 +100,8 @@ def mock_session_query():
 
 
 @patch("app.utils.Food", MockFood)
-@patch("app.utils.select", MagicMock)
-@patch("app.utils.func", MagicMock)
+@patch("app.utils.select", MagicMock())
+@patch("app.utils.func", MagicMock()())
 def test_get_top_foods_by_category(mock_session_query):
     category = ["Viande"]
     percentage = 0.2

@@ -11,4 +11,4 @@ requires-python = ">=3.9"
 # Only scanning app/ folder
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["app*"]
+include = ["app*", "tests*"]
