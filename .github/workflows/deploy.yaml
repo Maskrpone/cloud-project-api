@@ -1,0 +1,47 @@
+name: CD for API on Azure Container Apps
+on:
+  push:
+    branches:
+      - main
+permissions:
+  id-token: write
+  contents: read
+env:
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  ACR_NAME: "cloudprojectapiacr"
+  IMAGE_NAME: "api-container"
+  CONTAINER_APP_NAME: "cloud-project-api-container"
+  RESOURCE_GROUP: "cloud-supreme-louse"
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Azure login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          # WIF method
+          allow-no-subscriptions: true
+          enable-concurrent-login: false
+          # creds: '{"clientId": "${{secrets.AZURE_CLIENT_ID}}", "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}", "subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZURE_TENANT_ID }}"}'
+      - name: Setup Docker image
+        id: vars
+        run: |
+          IMAGE_TAG=${{github.sha}}
+          FULL_IMAGE_PATH="${{env.ACR_NAME}}.azurecr.io/${{env.IMAGE_NAME}}:$IMAGE_TAG"
+          echo "TAG=$IMAGE_TAG" >> $GITHUB_ENV
+          echo "FULL_IMAGE_PATH=$FULL_IMAGE_PATH" >> $GITHUB_ENV
+      - name: ACR Login
+        run: az acr login --name ${{ env.ACR_NAME }}
+      - name: Build & push to ACR
+        run: |
+          docker build -t ${{env.FULL_IMAGE_PATH}} .
+          docker push ${{ env.FULL_IMAGE_PATH }}
+      - name: Deploy new API version to ACA
+        run: "az containerapp update \\\n  --name ${{env.CONTAINER_APP_NAME}} \\\n  --resource-group ${{env.RESOURCE_GROUP}} \\\n  -- image ${{env.FULL_IMAGE_PATH}}\n   \n"

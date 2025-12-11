@@ -15,6 +15,9 @@ provider "azurerm" {
   features {}
 }
 
+# get the subscription
+data "azurerm_subscription" "current" {}
+
 # Random pet is used to get a random name for some resources (rg, mssql_server)
 resource "random_pet" "rg_name" {
   prefix = var.resource_group_name_prefix
@@ -82,45 +85,113 @@ resource "azurerm_mssql_firewall_rule" "allow_azure_services" {
   end_ip_address   = "0.0.0.0"
 }
 
-# resource "azurerm_service_plan" "app_service_plan" {
-#   name                = "${var.repo_name}-asp"
-#   resource_group_name = azurerm_resource_group.rg.name
-#   location            = azurerm_resource_group.rg.location
-#
-#   os_type  = "Linux"
-#   sku_name = "F1"
-# }
+resource "azurerm_log_analytics_workspace" "log_workspace" {
+  name                = "${random_pet.rg_name.id}-log"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  sku                 = "PerGB2018"
+}
 
+resource "azurerm_container_app_environment" "env" {
+  name                       = "${random_pet.rg_name.id}-env"
+  location                   = azurerm_resource_group.rg.location
+  resource_group_name        = azurerm_resource_group.rg.name
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.log_workspace.id
+}
 
-# resource "azurerm_linux_web_app" "fastapi_app" {
-#   name                = "cloud-fastapi"
-#   resource_group_name = azurerm_resource_group.rg.name
-#   location            = azurerm_resource_group.rg.location
-#   service_plan_id     = azurerm_service_plan.app_service_plan.id
-#
-#
-#   site_config {
-#
-#     application_stack {
-#       docker_image     = "${azurerm_container_registry.acr.login_server}/${var.app_image_name}:latest"
-#       docker_image_tag = "latest"
-#     }
-#     # linux_fx_version = "DOCKER|${azurerm_container_registry.acr.login_server}/${var.app_image_name}:latest"
-#   }
-#
-#   app_settings = {
-#     "DOCKER_REGISTRY_SERVER_URL"      = azurerm_container_registry.acr.login_server
-#     "DOCKER_REGISTRY_SERVER_USERNAME" = azurerm_container_registry.acr.admin_username
-#     "DOCKER_REGISTRY_SERVER_PASSWORD" = azurerm_container_registry.acr.admin_password
-#
-#     # SQL Connection Settings
-#     "SQL_SERVER_NAME" = azurerm_mssql_server.server.fully_qualified_domain_name
-#     "SQL_DATABASE"    = azurerm_mssql_database.db.name
-#     "ADMIN_USER"      = azurerm_mssql_server.server.administrator_login
-#     "ADMIN_PASSWORD"  = local.admin_password
-#   }
-#
-#   identity {
-#     type = "SystemAssigned"
-#   }
-# }
+# Needs to create it AFTER having an image registered in the ACR
+resource "azurerm_container_app" "api_app" {
+  name                         = "${var.repo_name}-container"
+  container_app_environment_id = azurerm_container_app_environment.env.id
+  resource_group_name          = azurerm_resource_group.rg.name
+  revision_mode                = "Single"
+
+  # Enable System-Assigned Identity to authenticate to ACR
+  identity {
+    type = "SystemAssigned"
+  }
+
+  # Ingress configuration to expose API publicly
+  ingress {
+    external_enabled = true
+    target_port      = 80
+    transport        = "auto"
+
+    # TODO : Configure CORS for API
+    traffic_weight {
+      latest_revision = true
+      percentage      = 100
+    }
+  }
+
+  # Password to DB
+  secret {
+    name  = "sql-admin-password" # Name referenced in the 'env' block
+    value = local.admin_password # password 
+  }
+
+  # Password to private ACR
+  secret {
+    name  = "acr-password"
+    value = azurerm_container_registry.acr.admin_password
+  }
+
+  # Access to ACR
+  registry {
+    server               = azurerm_container_registry.acr.login_server
+    username             = azurerm_container_registry.acr.admin_username
+    password_secret_name = "acr-password"
+  }
+
+  template {
+    # Container Definition
+    container {
+      name = "api-container"
+      # Full path to ACR
+      image  = "${azurerm_container_registry.acr.login_server}/${var.app_image_name}:latest"
+      cpu    = 0.5
+      memory = "1.0Gi"
+
+      # Environment Variables 
+      env {
+        name  = "SQL_SERVER_NAME"
+        value = azurerm_mssql_server.server.fully_qualified_domain_name
+      }
+      # env {
+      #   name  = "SQL_DATABASE"
+      #   value = azurerm_mssql_database.db.name
+      # }
+      env {
+        name  = "ADMIN_USERNAME"
+        value = azurerm_mssql_server.server.administrator_login
+      }
+      env {
+        name        = "ADMIN_PASSWORD"
+        secret_name = "sql-admin-password"
+      }
+    }
+  }
+}
+
+resource "azurerm_user_assigned_identity" "github_identity" {
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  name                = "github-actions-identity"
+}
+
+resource "azurerm_role_assignment" "github_deployer_role" {
+  scope = data.azurerm_subscription.current.id
+  role_definition_name = "Contributor"
+  principal_id = azurerm_user_assigned_identity.github_identity.principal_id
+}
+
+resource "azurerm_federated_identity_credential" "github_deploy_credential" {
+  name = "github-deploy-credential"
+  resource_group_name = azurerm_resource_group.rg.name
+  # location = azurerm_resource_group.rg.location
+
+  parent_id = azurerm_user_assigned_identity.github_identity.id
+  issuer = "https://token.actions.githubusercontent.com"
+  subject = "repo:Maskrpone/cloud-project-api:ref:refs/heads/main"
+  audience = ["api://azureADTokenExchange"]
+}
