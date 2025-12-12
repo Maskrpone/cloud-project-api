@@ -63,3 +63,41 @@ def get_top_foods_by_category(
     top_food = session.exec(top_food_statement).all()
 
     return top_food
+
+
+def validate_phase(phase, phases):
+    if phase not in phases:
+        raise HTTPException(
+            status_code=400,
+            detail="Phase must be 'menstruelle', 'folliculaire', 'ovulatoire' or 'luteal'",
+        )
+
+
+# def get_top_food_by_nutrient(params: tuple[str, list[str]], percentage: float, session: Session) -> list[str]:
+#     nutrient, category_keywords = params
+#
+#     if category_keywords:
+#
+#         for key in category_keywords:
+
+
+def get_top_food_by_abs_nutrient(
+    nutrient: str, percentage: float, session: Session
+) -> list[str]:
+    if not hasattr(Food, nutrient):
+        return None
+
+    order_by_clause = getattr(Food, nutrient).desc()
+    # list_food_statement = select(Food.name).order_by(order_by_clause).limit()
+
+    count_statement = select(func.count(getattr(Food, nutrient)))
+    total_count = session.exec(count_statement).one()
+
+    top_limit = max(1, round(total_count * percentage))
+
+    # SELECT * FROM food_table ORDER BY nutrient DESC LIMIT top_limit
+    statement = select(Food.nom).order_by(order_by_clause).limit(top_limit)
+
+    results = session.exec(statement).all()
+
+    return results
