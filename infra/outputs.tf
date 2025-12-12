@@ -20,8 +20,3 @@ output "resource_group_id" {
   description = "ID of the azure resource group"
   value       = azurerm_resource_group.rg.id
 }
-
-# output "acr_login_server" {
-#   description = "Login server of the ACR"
-#   value       = azurerm_resource_group.acr.login_server
-# }

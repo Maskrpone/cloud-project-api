@@ -117,7 +117,6 @@ resource "azurerm_container_app" "api_app" {
     target_port      = 80
     transport        = "auto"
 
-    # TODO : Configure CORS for API
     traffic_weight {
       latest_revision = true
       percentage      = 100
@@ -200,14 +199,14 @@ resource "azurerm_container_app" "streamlit_app" {
 
   template {
     container {
-      name = "streamlit-container"
+      name   = "streamlit-container"
       image  = "${azurerm_container_registry.acr.login_server}/${var.streamlit_app_image_name}:latest"
       cpu    = 0.5
       memory = "1.0Gi"
 
       # Environment Variables for the Streamlit app to call the FastAPI
       env {
-        name = "API_URL"
+        name  = "API_URL"
         value = "http://${azurerm_container_app.api_app.name}"
       }
     }
