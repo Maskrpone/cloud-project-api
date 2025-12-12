@@ -90,7 +90,7 @@ To deploy this infrastructure, you first need :
 - docker
 - terraform 
 
-> [!INFO]
+> [!INFOS]
 > To log in to az CLI, simply run `az login`, and it will open a web page.
 
 The infrastructue is deployable using terraform CLI :
