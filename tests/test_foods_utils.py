@@ -1,12 +1,15 @@
 import pytest
 from fastapi import HTTPException
 from unittest.mock import patch, MagicMock
+from sqlmodel import select, func
+from typing import List, Tuple
 
 from app.utils import (
     valid_category,
     validate_params,
     map_categories,
     get_top_foods_by_category,
+    get_top_food_by_abs_nutrient,
 )
 
 
@@ -23,7 +26,7 @@ class MockColumn:
 
 
 class MockFood:
-    nom = "nom"
+    nom = MockColumn()
     categorie = MockColumn()
     proteine = MockColumn()
     phosphore = MockColumn()
@@ -127,3 +130,48 @@ def test_get_top_foods_by_category(mock_session_query):
     count_call_count = mock_session_query.exec.call_count
     assert count_call_count >= 1
     assert mock_session_query.exec.call_count >= 2
+
+#
+# @patch("app.utils.Food", MockFood)
+# @patch("app.utils.select", MagicMock(wraps=select))
+# @patch("app.utils.func", MagicMock(wraps=func))
+# def test_get_top_food_by_abs_nutrient_success():
+#     MOCK_TOTAL_COUNT = 200
+#     TARGET_PERCENTAGE = 0.10
+#
+#     MOCK_FOOD_NAMES_TUPLES: List[Tuple[str]] = [
+#         ("Filet de Bœuf",),
+#         ("Pois Chiches Secs",),
+#         ("Fromage de Chèvre",),
+#     ]
+#
+#     mock_session = MagicMock()
+#
+#     mock_session.exec.side_effect = [
+#         MagicMock(one=lambda: MOCK_TOTAL_COUNT),
+#         MagicMock(all=lambda: MOCK_FOOD_NAMES_TUPLES),
+#     ]
+#
+#     nutrient = "proteine"
+#
+#     results = get_top_food_by_abs_nutrient(nutrient, TARGET_PERCENTAGE, mock_session)
+#
+#     expected_names = ["Filet de Bœuf", "Pois Chiches Secs", "Fromage de Chèvre"]
+#     assert results == expected_names
+#
+#     assert mock_session.exec.call_count == 2
+#
+#     calculated_limit = max(1, round(MOCK_TOTAL_COUNT * TARGET_PERCENTAGE))
+#     assert calculated_limit == 20
+#
+#
+# def test_get_top_food_by_abs_nutrient_invalid_column():
+#     mock_session = MagicMock()
+#
+#     nutrient = "calories_total"
+#
+#     results = get_top_food_by_abs_nutrient(nutrient, 0.1, mock_session)
+#
+#     assert results is None
+#
+#     mock_session.exec.assert_not_called()
