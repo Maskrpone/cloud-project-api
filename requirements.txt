@@ -10,3 +10,4 @@ pyodbc==5.2.0
 pytest==8.4.2
 httpx==0.28.1
 beautifulsoup4==4.13.4
+requests==2.32.5
