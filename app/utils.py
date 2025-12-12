@@ -85,7 +85,10 @@ def validate_phase(phase, phases):
 
 
 def get_top_food_by_abs_nutrient(
-        nutrient: str, percentage: float, session: Session, mois: int = datetime.date.today().month
+    nutrient: str,
+    percentage: float,
+    session: Session,
+    mois: int = datetime.date.today().month,
 ) -> list[str]:
     if not hasattr(Food, nutrient):
         return None
@@ -129,7 +132,7 @@ def get_seasoned_food(mois: int):
 
     response = requests.get(SEASON_URL)
     if response.status_code == 200:
-        response.encoding = 'utf-8'
+        response.encoding = "utf-8"
         html_content = response.text
         soup = BeautifulSoup(html_content, "html.parser")
         result = {}
@@ -139,7 +142,9 @@ def get_seasoned_food(mois: int):
                 article_balise = a_balise.find_next_sibling("article")
                 if article_balise:
                     li_tags = article_balise.find_all("li")
-                    result[cat.split("-")[1]] = [li.get_text(strip=True) for li in li_tags]
+                    result[cat.split("-")[1]] = [
+                        li.get_text(strip=True) for li in li_tags
+                    ]
         print(result)
         return result
     else:
