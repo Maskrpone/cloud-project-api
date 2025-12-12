@@ -2,7 +2,6 @@
 
 This repo is the backend of the cloud project. 
 If you want to see the streamlit app, go [here](https://github.com/Maskrpone/cloud-project).
-Our project is divided into two repositories : @FIXME : add url to frontend 
 
 ## Links 
 
