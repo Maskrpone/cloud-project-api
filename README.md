@@ -90,7 +90,7 @@ To deploy this infrastructure, you first need :
 - docker
 - terraform 
 
-> [!INFOS]
+> [!NOTE]
 > To log in to az CLI, simply run `az login`, and it will open a web page.
 
 The infrastructue is deployable using terraform CLI :
@@ -104,7 +104,7 @@ terraform apply -target=azurerm_container_app_environment.env
 
 As the ACR does not already have the docker images, you first need to push the images to the ACR, and then you can finish by doing `terraform apply`.
 
-> [!TIPS]
+> [!TIP]
 > You need to log in into the acr before pushing.
 > Use `az acr login --name <ACR-NAME>`
 > You can find the name on the Azure portal, 
