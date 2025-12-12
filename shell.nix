@@ -17,6 +17,7 @@ pkgs.mkShell {
 													flake8
 													psycopg2
 													pytest
+													beautifulsoup4
 		]))
 
 			# Driver for mssql
