@@ -101,4 +101,3 @@ def get_top_food_by_abs_nutrient(
     results = session.exec(statement).all()
 
     return results
-

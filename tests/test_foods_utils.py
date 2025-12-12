@@ -1,15 +1,12 @@
 import pytest
 from fastapi import HTTPException
 from unittest.mock import patch, MagicMock
-from sqlmodel import select, func
-from typing import List, Tuple
 
 from app.utils import (
     valid_category,
     validate_params,
     map_categories,
     get_top_foods_by_category,
-    get_top_food_by_abs_nutrient,
 )
 
 
@@ -130,6 +127,7 @@ def test_get_top_foods_by_category(mock_session_query):
     count_call_count = mock_session_query.exec.call_count
     assert count_call_count >= 1
     assert mock_session_query.exec.call_count >= 2
+
 
 #
 # @patch("app.utils.Food", MockFood)
