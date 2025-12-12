@@ -17,6 +17,8 @@ class Food(SQLModel, table=True):
     acides_gras_satures: Optional[float]
     acides_gras_mono_insatures: Optional[float]
     acides_gras_poly_insatures: Optional[float]
+    acide_linoleique: Optional[float]
+    acide_alpha_linolenique: Optional[float]
     cholesterol: Optional[int]
     glucides_disponibles: Optional[float]
     sucres: Optional[float]
