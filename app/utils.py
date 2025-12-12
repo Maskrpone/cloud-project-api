@@ -1,7 +1,10 @@
 from fastapi import HTTPException
+from bs4 import BeautifulSoup
 from app.models import Food
 from sqlmodel import Session, select, func
 from typing import List, Dict
+import requests
+import datetime
 
 
 def valid_category(category: str, keyword: str) -> bool:
@@ -82,7 +85,7 @@ def validate_phase(phase, phases):
 
 
 def get_top_food_by_abs_nutrient(
-    nutrient: str, percentage: float, session: Session
+        nutrient: str, percentage: float, session: Session, mois: int = datetime.date.today().month
 ) -> list[str]:
     if not hasattr(Food, nutrient):
         return None
@@ -96,8 +99,49 @@ def get_top_food_by_abs_nutrient(
     top_limit = max(1, round(total_count * percentage))
 
     # SELECT * FROM food_table ORDER BY nutrient DESC LIMIT top_limit
-    statement = select(Food.nom).order_by(order_by_clause).limit(top_limit)
-
+    statement = select(Food).order_by(order_by_clause).limit(top_limit)
     results = session.exec(statement).all()
 
     return results
+
+
+SEASON_URL = "https://www.greenpeace.fr/guetteur/calendrier/"
+
+
+def get_seasoned_food(mois: int):
+    mois_mot = [
+        "janvier",
+        "fevrier",
+        "mars",
+        "avril",
+        "mai",
+        "juin",
+        "juillet",
+        "aout",
+        "septembre",
+        "octobre",
+        "novembre",
+        "decembre",
+    ]
+    mois_a_chercher = mois_mot[mois - 1]
+    categories = [f"{mois_a_chercher}-legumes", f"{mois_a_chercher}-fruits"]
+    print(f"Categories: {categories}")
+
+    response = requests.get(SEASON_URL)
+    if response.status_code == 200:
+        response.encoding = 'utf-8'
+        html_content = response.text
+        soup = BeautifulSoup(html_content, "html.parser")
+        result = {}
+        for cat in categories:
+            a_balise = soup.find("a", id=cat)
+            if a_balise:
+                article_balise = a_balise.find_next_sibling("article")
+                if article_balise:
+                    li_tags = article_balise.find_all("li")
+                    result[cat.split("-")[1]] = [li.get_text(strip=True) for li in li_tags]
+        print(result)
+        return result
+    else:
+        print("Error in connexion")
+        return

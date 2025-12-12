@@ -8,6 +8,7 @@ from app.utils import (
     get_top_foods_by_category,
     validate_phase,
     get_top_food_by_abs_nutrient,
+    get_seasoned_food,
 )
 from app.db import get_db_session
 
@@ -84,3 +85,9 @@ def read_food_by_phase(
         top_food[name] = get_top_food_by_abs_nutrient(name, percentage, session)
 
     return [top_food]
+
+
+@app.get("/by-season/", response_model=List[Dict])
+def read_season(month: int, session: Session = Depends(get_db_session)):
+    foods = get_seasoned_food(month)
+    return [foods]

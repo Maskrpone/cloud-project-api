@@ -157,10 +157,6 @@ resource "azurerm_container_app" "api_app" {
         name  = "SQL_SERVER_NAME"
         value = azurerm_mssql_server.server.fully_qualified_domain_name
       }
-      # env {
-      #   name  = "SQL_DATABASE"
-      #   value = azurerm_mssql_database.db.name
-      # }
       env {
         name  = "ADMIN_USERNAME"
         value = azurerm_mssql_server.server.administrator_login
@@ -173,28 +169,73 @@ resource "azurerm_container_app" "api_app" {
   }
 }
 
+resource "azurerm_container_app" "streamlit_app" {
+  name                         = "${var.streamlit_repo_name}-container"
+  container_app_environment_id = azurerm_container_app_environment.env.id
+  resource_group_name          = azurerm_resource_group.rg.name
+  revision_mode                = "Single"
+
+  ingress {
+    external_enabled = true
+    target_port      = 8501 # Default port for Streamlit
+    transport        = "auto"
+
+    traffic_weight {
+      latest_revision = true
+      percentage      = 100
+    }
+  }
+
+  secret {
+    name  = "acr-password"
+    value = azurerm_container_registry.acr.admin_password
+  }
+
+  # Access to ACR 
+  registry {
+    server               = azurerm_container_registry.acr.login_server
+    username             = azurerm_container_registry.acr.admin_username
+    password_secret_name = "acr-password" # References secret defined in api_app
+  }
+
+  template {
+    container {
+      name = "streamlit-container"
+      image  = "${azurerm_container_registry.acr.login_server}/${var.streamlit_app_image_name}:latest"
+      cpu    = 0.5
+      memory = "1.0Gi"
+
+      # Environment Variables for the Streamlit app to call the FastAPI
+      env {
+        name = "API_URL"
+        value = "http://${azurerm_container_app.api_app.name}"
+      }
+    }
+  }
+}
+
 # Tried for obtaining a working CD (for Azure login with GitHub actions), 
 # but it is not working.
-resource "azurerm_user_assigned_identity" "github_identity" {
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
-  name                = "github-actions-identity"
-}
-
-resource "azurerm_role_assignment" "github_deployer_role" {
-  scope                = data.azurerm_subscription.current.id
-  role_definition_name = "Contributor"
-  principal_id         = azurerm_user_assigned_identity.github_identity.principal_id
-}
-
-resource "azurerm_federated_identity_credential" "github_deploy_credential" {
-  name                = "github-deploy-credential"
-  resource_group_name = azurerm_resource_group.rg.name
-  parent_id           = azurerm_user_assigned_identity.github_identity.id
-  issuer              = "https://token.actions.githubusercontent.com"
-  subject             = "repo:Maskrpone/cloud-project-api:ref:refs/heads/main"
-
-  # audience = ["api://AzureADTokenExchange"]
-  audience = ["api://azureadtokenexchange"]
-}
+# resource "azurerm_user_assigned_identity" "github_identity" {
+#   resource_group_name = azurerm_resource_group.rg.name
+#   location            = azurerm_resource_group.rg.location
+#   name                = "github-actions-identity"
+# }
+#
+# resource "azurerm_role_assignment" "github_deployer_role" {
+#   scope                = data.azurerm_subscription.current.id
+#   role_definition_name = "Contributor"
+#   principal_id         = azurerm_user_assigned_identity.github_identity.principal_id
+# }
+#
+# resource "azurerm_federated_identity_credential" "github_deploy_credential" {
+#   name                = "github-deploy-credential"
+#   resource_group_name = azurerm_resource_group.rg.name
+#   parent_id           = azurerm_user_assigned_identity.github_identity.id
+#   issuer              = "https://token.actions.githubusercontent.com"
+#   subject             = "repo:Maskrpone/cloud-project-api:ref:refs/heads/main"
+#
+#   # audience = ["api://AzureADTokenExchange"]
+#   audience = ["api://azureadtokenexchange"]
+# }
 

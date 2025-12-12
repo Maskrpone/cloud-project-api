@@ -46,3 +46,15 @@ variable "app_image_name" {
   description = "Name of the app container"
   default     = "api-container"
 }
+
+variable "streamlit_repo_name" {
+  type = string
+  description = "name of the streamlit repo"
+  default = "cloud-streamlit"
+}
+
+variable "streamlit_app_image_name" {
+  type = string
+  description = "name of the streamlit image"
+  default = "cloud-streamlit"
+}
